@@ -4,6 +4,7 @@
             [core.db :as db]
             [core.model :as m]))
 
+(db/apaga-banco!)
 (def conn (db/abre-conexao!))
 (db/cria-schema! conn)
 
@@ -36,5 +37,3 @@
 ;Busca por palavra-chave
 (pprint (db/todos-os-produtos-por-palavra-chave (d/db conn) "celular"))
 (pprint (db/todos-os-produtos-por-palavra-chave (d/db conn) "monitor preto e branco"))
-
-;(db/apaga-banco)

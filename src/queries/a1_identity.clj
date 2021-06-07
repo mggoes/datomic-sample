@@ -4,6 +4,7 @@
             [core.db :as db]
             [core.model :as m]))
 
+(db/apaga-banco!)
 (def conn (db/abre-conexao!))
 (db/cria-schema! conn)
 
@@ -30,5 +31,3 @@
                     :produto/id))
 (println "O id do primeiro produto" produto-id)
 (pprint (db/um-produto (d/db conn) produto-id))
-
-;(db/apaga-banco)

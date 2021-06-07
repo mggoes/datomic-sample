@@ -4,6 +4,7 @@
             [core.db :as db]
             [core.model :as m]))
 
+(db/apaga-banco!)
 (def conn (db/abre-conexao!))
 (db/cria-schema! conn)
 
@@ -19,5 +20,3 @@
 (pprint @(d/transact conn [celular-barato-2]))
 
 (pprint (db/todos-os-produtos-pull-generico (d/db conn)))
-
-;(db/apaga-banco)

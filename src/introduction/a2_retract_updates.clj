@@ -4,6 +4,7 @@
             [core.db :as db]
             [core.model :as m]))
 
+(db/apaga-banco!)
 (def conn (db/abre-conexao!))
 (db/cria-schema! conn)
 
@@ -26,5 +27,3 @@
   (pprint @(d/transact conn [[:db/add id-entidade :produto/preco 0.1M]]))
   ;Removendo um valor
   (pprint @(d/transact conn [[:db/retract id-entidade :produto/slug "/celular_barato"]])))
-
-;(db/apaga-banco!)

@@ -4,12 +4,13 @@
             [core.db :as db]
             [core.model :as m]))
 
+(db/apaga-banco!)
 (def conn (db/abre-conexao!))
 (db/cria-schema! conn)
 
 ;===================================================
 ;Salvando um item
-;No Datomic a unidade basica e um datom, que e um fato que ocorreu de forma atomica e que possui informacoes do que aconteceu, alem dos dados alterados/inseridos/removidos
+;No Datomic a unidade basica eh um datom, que eh um fato que ocorreu de forma atomica e que possui informacoes do que aconteceu, alem dos dados alterados/inseridos/removidos
 (let [computador (m/novo-produto "Computador Novo" "/computador_novo" 2500.10M)]
   (d/transact conn [computador]))
 
@@ -31,5 +32,3 @@
 
 (d/q '[:find ?entidade
        :where [?entidade :produto/nome]] db)
-
-;(db/apaga-banco!)

@@ -4,6 +4,7 @@
             [core.db :as db]
             [core.model :as m]))
 
+(db/apaga-banco!)
 (def conn (db/abre-conexao!))
 (db/cria-schema! conn)
 
@@ -32,5 +33,3 @@
 
 (pprint (db/todos-os-produtos-da-categoria-2 (d/db conn) "Esporte"))
 (pprint (db/todos-os-produtos-da-categoria-2 (d/db conn) "Eletronicos"))
-
-;(db/apaga-banco!)

@@ -70,7 +70,35 @@
   (d/transact conn schema))
 
 ;===================================================
-;Escrevendo consultas
+;Transact
+(defn db-adds
+  [produtos categoria]
+  (reduce (fn [db-adds produto] (conj db-adds [:db/add
+                                               [:produto/id (:produto/id produto)]
+                                               :produto/categoria
+                                               [:categoria/id (:categoria/id categoria)]]))
+          []
+          produtos))
+
+(defn atribui-categorias!
+  [conn produtos categoria]
+  (let [a-transactionar (db-adds produtos categoria)]
+    (d/transact conn a-transactionar)))
+
+(defn adiciona-produtos!
+  ([conn produtos]
+   (d/transact conn produtos))
+  ([conn produtos ip]
+   (let [db-add-ip [:db/add "datomic.tx" :tx-data/ip ip]]
+     ;Adiciona informacao na transacao
+     (d/transact conn (conj produtos db-add-ip)))))
+
+(defn adiciona-categorias!
+  [conn categorias]
+  (d/transact conn categorias))
+
+;===================================================
+;Consultas
 ;A linguagem de query do Datomic eh uma extensao do Datalog
 (defn todos-os-produtos
   [db]
@@ -164,32 +192,6 @@
   [db]
   (d/q '[:find (pull ?categoria [*])
          :where [?categoria :categoria/id]] db))
-
-(defn db-adds
-  [produtos categoria]
-  (reduce (fn [db-adds produto] (conj db-adds [:db/add
-                                               [:produto/id (:produto/id produto)]
-                                               :produto/categoria
-                                               [:categoria/id (:categoria/id categoria)]]))
-          []
-          produtos))
-
-(defn atribui-categorias!
-  [conn produtos categoria]
-  (let [a-transactionar (db-adds produtos categoria)]
-    (d/transact conn a-transactionar)))
-
-(defn adiciona-produtos!
-  ([conn produtos]
-   (d/transact conn produtos))
-  ([conn produtos ip]
-   (let [db-add-ip [:db/add "datomic.tx" :tx-data/ip ip]]
-     ;Adiciona informacao na transacao
-     (d/transact conn (conj produtos db-add-ip)))))
-
-(defn adiciona-categorias!
-  [conn categorias]
-  (d/transact conn categorias))
 
 (defn todos-os-nomes-de-produtos-e-categorias
   [db]

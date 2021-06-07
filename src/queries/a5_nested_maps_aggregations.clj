@@ -4,6 +4,7 @@
             [core.db :as db]
             [core.model :as m]))
 
+(db/apaga-banco!)
 (def conn (db/abre-conexao!))
 (db/cria-schema! conn)
 
@@ -45,5 +46,3 @@
 
 (pprint (db/resumo-dos-produtos (d/db conn)))
 (pprint (db/resumo-dos-produtos-por-categoria (d/db conn)))
-
-;(db/apaga-banco!)

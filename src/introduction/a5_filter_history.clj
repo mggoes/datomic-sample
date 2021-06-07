@@ -4,6 +4,7 @@
             [core.db :as db]
             [core.model :as m]))
 
+(db/apaga-banco!)
 (def conn (db/abre-conexao!))
 (db/cria-schema! conn)
 
@@ -27,5 +28,3 @@
 ;Recuperando um banco filtrado, ou seja, um snapshot do passado
 ;as-of permite especificar um momento no passado para recuperar um snapshot do banco
 (pprint (count (db/todos-os-produtos-pull (d/as-of (d/db conn) #inst "2021-05-28T21:26:42.370"))))
-
-;(db/apaga-banco!)

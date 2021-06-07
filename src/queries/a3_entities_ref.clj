@@ -4,6 +4,7 @@
             [core.db :as db]
             [core.model :as m]))
 
+(db/apaga-banco!)
 (def conn (db/abre-conexao!))
 (db/cria-schema! conn)
 
@@ -47,5 +48,3 @@
 
 (db/atribui-categorias! conn [computador celular celular-barato] eletronicos)
 (pprint (db/todos-os-produtos-pull-generico (d/db conn)))
-
-;(db/apaga-banco)

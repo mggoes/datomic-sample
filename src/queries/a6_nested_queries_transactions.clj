@@ -4,6 +4,7 @@
             [core.db :as db]
             [core.model :as m]))
 
+(db/apaga-banco!)
 (def conn (db/abre-conexao!))
 (db/cria-schema! conn)
 
@@ -49,5 +50,3 @@
 
 ;Buscando por informacoes na transacao
 (pprint (db/todos-os-produtos-do-ip (d/db conn) "127.0.0.1"))
-
-;(db/apaga-banco!)
