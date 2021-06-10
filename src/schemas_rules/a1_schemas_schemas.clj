@@ -1,4 +1,4 @@
-(ns schemas-rules.schemas-schemas
+(ns schemas-rules.a1-schemas-schemas
   (:use [clojure pprint])
   (:require [datomic.api :as d]
             [schemas-rules.db :as db]

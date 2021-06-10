@@ -3,7 +3,8 @@
   (:require [datomic.api :as d]
             [schemas-rules.model :as m]
             [schema.core :as s]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk])
+  (:import (java.util UUID)))
 
 (def db-uri "datomic:dev://localhost:4334/ecommerce")
 
@@ -79,15 +80,15 @@
                                                [:produto/id (:produto/id produto)]
                                                :produto/categoria
                                                [:categoria/id (:categoria/id categoria)]]))
-          []
-          produtos))
+    []
+    produtos))
 
 (defn atribui-categorias!
   [conn produtos categoria]
   (let [a-transactionar (db-adds produtos categoria)]
     (d/transact conn a-transactionar)))
 
-(s/defn adiciona-produtos!
+(s/defn adiciona-ou-altera-produtos!
   ([conn produtos :- [m/Produto]]
    (d/transact conn produtos))
   ([conn produtos :- [m/Produto] ip]
@@ -114,7 +115,7 @@
 
 (s/defn todos-as-categorias :- [m/Categoria]
   [db]
-  ;Colocando o pull entre conchetes [] faz com que o Datomic retorne o resultado sem encapsular nos colchetes
+  ;Colocando o pull entre colchetes [] faz com que o Datomic retorne o resultado sem encapsular nos colchetes
   ;Quando utilizado colchetes o Datomic retorna apenas 1 elemento, para retorna todos eh preciso utilizar reticencias (...)
   (datomic-para-entidade (d/q '[:find [(pull ?categoria [*]) ...]
                                 :where [?categoria :categoria/id]] db)))
@@ -136,7 +137,25 @@
   ;(def calculadora {:produto/nome "Calculadora com 4 operações"})
   (def celular-barato (m/novo-produto "Celular Barato" "/celular_barato" 0.1M))
   (def xadres (m/novo-produto "Tabuleiro de xadres" "/tabuleiro_xadres" 30M))
-  (adiciona-produtos! conn [computador celular celular-barato xadres] "127.0.0.1")
+  (adiciona-ou-altera-produtos! conn [computador celular celular-barato xadres] "127.0.0.1")
 
   (atribui-categorias! conn [computador celular celular-barato] eletronicos)
   (atribui-categorias! conn [xadres] esporte))
+
+;===================================================
+;Maybe
+;Permite especificar um tipo que deve satisfazer o schema ou ser nil
+(s/defn um-produto :- (s/maybe m/Produto)
+  [db produto-id :- UUID]
+  (let [resultado (d/pull db '[* {:produto/categoria [*]}] [:produto/id produto-id])
+        produto (datomic-para-entidade resultado)]
+    (if (:produto/id produto)
+      produto
+      nil)))
+
+(s/defn um-produto! :- m/Produto
+  [db produto-id :- UUID]
+  (let [produto (um-produto db produto-id)]
+    (when (nil? produto)
+      (throw (ex-info "Produto nao encontrado" {:type :errors/not-found :id produto-id})))
+    produto))
