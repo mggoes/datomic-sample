@@ -51,6 +51,14 @@
               :db/valueType   :db.type/ref
               :db/cardinality :db.cardinality/one
               :db/doc         "Categoria do produto"}
+             {:db/ident       :produto/estoque
+              :db/valueType   :db.type/long
+              :db/cardinality :db.cardinality/one
+              :db/doc         "Estoque do produto"}
+             {:db/ident       :produto/digital
+              :db/valueType   :db.type/boolean
+              :db/cardinality :db.cardinality/one
+              :db/doc         "Indica se o produto eh digital"}
              ;========================================
              ;Categoria
              {:db/ident       :categoria/nome
@@ -132,14 +140,15 @@
   (def esporte (m/nova-categoria "Esporte"))
   (adiciona-categorias! conn [eletronicos esporte])
 
-  (def computador (m/novo-produto (m/uuid) "Computador Novo" "/computador_novo" 2500.10M))
+  (def computador (m/novo-produto (m/uuid) "Computador Novo" "/computador_novo" 2500.10M 10))
   (def celular (m/novo-produto (m/uuid) "Celular Novo" "/celular" 888888.10M))
   ;(def calculadora {:produto/nome "Calculadora com 4 operações"})
   (def celular-barato (m/novo-produto "Celular Barato" "/celular_barato" 0.1M))
-  (def xadres (m/novo-produto "Tabuleiro de xadres" "/tabuleiro_xadres" 30M))
-  (adiciona-ou-altera-produtos! conn [computador celular celular-barato xadres] "127.0.0.1")
+  (def xadres (m/novo-produto (m/uuid) "Tabuleiro de xadres" "/tabuleiro_xadres" 30M 5))
+  (def jogo (assoc (m/novo-produto (m/uuid) "Jogo online" "/jogo_online" 20M) :produto/digital true))
+  (adiciona-ou-altera-produtos! conn [computador celular celular-barato xadres jogo] "127.0.0.1")
 
-  (atribui-categorias! conn [computador celular celular-barato] eletronicos)
+  (atribui-categorias! conn [computador celular celular-barato jogo] eletronicos)
   (atribui-categorias! conn [xadres] esporte))
 
 ;===================================================
@@ -159,3 +168,43 @@
     (when (nil? produto)
       (throw (ex-info "Produto nao encontrado" {:type :errors/not-found :id produto-id})))
     produto))
+
+;===================================================
+;Rules
+(def regras
+  '[
+    [(estoque ?produto ?estoque)
+     [?produto :produto/estoque ?estoque]]
+
+    [(estoque ?produto ?estoque)
+     [?produto :produto/digital true]
+     ;A funcao ground pode ser utilizada dentro de uma regra para fixar um valor para um simbolo
+     [(ground 100) ?estoque]]
+
+    ;Combinando regras
+    [(pode-vender? ?produto)
+     (estoque ?produto ?estoque)
+     [(> ?estoque 0)]]
+    ])
+
+(s/defn todos-os-produtos-vendaveis :- [m/Produto]
+  [db]
+  (datomic-para-entidade (d/q '[:find [(pull ?produto [* {:produto/categoria [*]}]) ...]
+                                :in $ %
+                                :where (pode-vender? ?produto)] db regras)))
+
+(s/defn um-produto-vendavel :- (s/maybe m/Produto)
+  [db produto-id :- UUID]
+  ;No find spec um ponto no final faz com que o Datomic retorne apenas 1 elemento (um escalar)
+  ;https://docs.datomic.com/on-prem/query/query.html#find-specifications
+  (let [query '[:find (pull ?produto [* {:produto/categoria [*]}]) .
+                ;Semelhante ao banco, o padrao de nomenclatura para regras eh porcentagem (%)
+                :in $ % ?id
+                :where [?produto :produto/id ?id]
+                ;Utilizando a regra
+                (pode-vender? ?produto)]
+        resultado (d/q query db regras produto-id)
+        produto (datomic-para-entidade resultado)]
+    (if (:produto/id produto)
+      produto
+      nil)))

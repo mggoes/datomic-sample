@@ -7,23 +7,29 @@
    :categoria/nome s/Str})
 
 (def Produto
-  {(s/optional-key :produto/nome)          s/Str
+  {:produto/id                             UUID
+   (s/optional-key :produto/nome)          s/Str
    (s/optional-key :produto/slug)          s/Str
    (s/optional-key :produto/preco)         BigDecimal
-   :produto/id                             UUID
    (s/optional-key :produto/palavra-chave) [s/Str]
-   (s/optional-key :produto/categoria)     Categoria})
+   (s/optional-key :produto/categoria)     Categoria
+   (s/optional-key :produto/estoque)       s/Num
+   (s/optional-key :produto/digital)       s/Bool})
 
 (defn uuid [] (UUID/randomUUID))
 
-(defn novo-produto
+(s/defn novo-produto :- Produto
   ([nome slug preco]
-   (novo-produto (uuid) nome slug preco))
+   (novo-produto (uuid) nome slug preco 0))
   ([uuid nome slug preco]
-   {:produto/id    uuid
-    :produto/nome  nome
-    :produto/slug  slug
-    :produto/preco preco}))
+   (novo-produto uuid nome slug preco 0))
+  ([uuid nome slug preco estoque]
+   {:produto/id      uuid
+    :produto/nome    nome
+    :produto/slug    slug
+    :produto/preco   preco
+    :produto/estoque estoque
+    :produto/digital false}))
 
 (defn nova-categoria
   ([nome]
