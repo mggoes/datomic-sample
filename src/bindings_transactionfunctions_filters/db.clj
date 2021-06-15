@@ -1,7 +1,7 @@
-(ns schemas-rules.db
+(ns bindings-transactionfunctions-filters.db
   (:use [clojure pprint])
   (:require [datomic.api :as d]
-            [schemas-rules.model :as m]
+            [bindings-transactionfunctions-filters.model :as m]
             [schema.core :as s]
             [clojure.walk :as walk])
   (:import (java.util UUID)))
@@ -185,6 +185,10 @@
     [(pode-vender? ?produto)
      (estoque ?produto ?estoque)
      [(> ?estoque 0)]]
+
+    [(produto-na-categoria ?produto ?nome-da-categoria)
+     [?categoria :categoria/nome ?nome-da-categoria]
+     [?produto :produto/categoria ?categoria]]
     ])
 
 (s/defn todos-os-produtos-vendaveis :- [m/Produto]
@@ -208,3 +212,22 @@
     (if (:produto/id produto)
       produto
       nil)))
+
+(s/defn todos-os-produtos-nas-categorias :- [m/Produto]
+  [db categorias :- [s/Str]]
+  (datomic-para-entidade (d/q '[:find [(pull ?produto [* {:produto/categoria [*]}]) ...]
+                                ;Collection binding
+                                ;Semelhante a um IN no SQL
+                                :in $ % [?nome-da-categoria ...]
+                                :where (produto-na-categoria ?produto ?nome-da-categoria)]
+                           db regras categorias)))
+
+(s/defn todos-os-produtos-nas-categorias-e-digital :- [m/Produto]
+  [db categorias :- [s/Str] digital? :- s/Bool]
+  (datomic-para-entidade (d/q '[:find [(pull ?produto [* {:produto/categoria [*]}]) ...]
+                                ;Collection binding
+                                ;Semelhante a um IN no SQL
+                                :in $ % [?nome-da-categoria ...] ?eh-digital?
+                                :where (produto-na-categoria ?produto ?nome-da-categoria)
+                                [?produto :produto/digital ?eh-digital?]]
+                           db regras categorias digital?)))
