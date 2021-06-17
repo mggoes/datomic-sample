@@ -6,6 +6,11 @@
   {:categoria/id   UUID
    :categoria/nome s/Str})
 
+(def Variacao
+  {:variacao/id    UUID
+   :variacao/nome  s/Str
+   :variacao/preco BigDecimal})
+
 (def Produto
   {:produto/id                             UUID
    (s/optional-key :produto/nome)          s/Str
@@ -14,7 +19,9 @@
    (s/optional-key :produto/palavra-chave) [s/Str]
    (s/optional-key :produto/categoria)     Categoria
    (s/optional-key :produto/estoque)       s/Num
-   (s/optional-key :produto/digital)       s/Bool})
+   (s/optional-key :produto/digital)       s/Bool
+   (s/optional-key :produto/variacao)      [Variacao]
+   (s/optional-key :produto/visualizacoes) s/Int})
 
 (defn uuid [] (UUID/randomUUID))
 

@@ -63,7 +63,17 @@
              {:db/ident       :produto/variacao
               :db/valueType   :db.type/ref
               :db/cardinality :db.cardinality/many
+              ;Quando um atributo eh marcado como component, o Datomic ja faz a consulta do mesmo na pesquisa
+              ;Semelhante ao eager
+              ;Com componentes, caso a entidade pai seja removida, a entidade filha tambem sera removida
+              :db/isComponent true
               :db/doc         "Variacao do produto"}
+             {:db/ident       :produto/visualizacoes
+              :db/valueType   :db.type/long
+              :db/cardinality :db.cardinality/one
+              ;Quando nao queremos que o banco armazene o historico de um atributo, basta marca-lo com db/noHistory
+              :db/noHistory   true
+              :db/doc         "Quantidades de visualizacoes"}
              ;========================================
              ;Variacao
              {:db/ident       :variacao/id
@@ -274,3 +284,29 @@
                      :variacao/id    (m/uuid)}
                     {:produto/id       produto-id
                      :produto/variacao "variacao-temporaria"}]))
+
+(defn total-de-produtos
+  [db]
+  (d/q '[:find [(count ?produto)]
+         :where [?produto :produto/nome]
+         ] db))
+
+(s/defn remove-produto!
+  [conn produto-id :- UUID]
+  ;retractEntity eh uma funcao de transacao que remove uma entidade do banco
+  (d/transact conn [[:db/retractEntity [:produto/id produto-id]]]))
+
+(s/defn visualizacoes
+  [db produto-id :- UUID]
+  (or (d/q '[:find ?visualizacoes .
+             :in $ ?id
+             :where [?p :produto/id ?id]
+             [?p :produto/visualizacoes ?visualizacoes]]
+        db produto-id) 0))
+
+(s/defn visualizacao!
+  [conn produto-id :- UUID]
+  (let [result (visualizacoes (d/db conn) produto-id)
+        novo (inc result)]
+    (d/transact conn [{:produto/id            produto-id
+                       :produto/visualizacoes novo}])))
