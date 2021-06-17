@@ -3,7 +3,8 @@
   (:require [datomic.api :as d]
             [bindings-transactionfunctions-filters.model :as m]
             [schema.core :as s]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [clojure.set :as cset])
   (:import (java.util UUID)))
 
 (def db-uri "datomic:dev://localhost:4334/ecommerce")
@@ -59,6 +60,22 @@
               :db/valueType   :db.type/boolean
               :db/cardinality :db.cardinality/one
               :db/doc         "Indica se o produto eh digital"}
+             {:db/ident       :produto/variacao
+              :db/valueType   :db.type/ref
+              :db/cardinality :db.cardinality/many
+              :db/doc         "Variacao do produto"}
+             ;========================================
+             ;Variacao
+             {:db/ident       :variacao/id
+              :db/valueType   :db.type/uuid
+              :db/cardinality :db.cardinality/one
+              :db/unique      :db.unique/identity}
+             {:db/ident       :variacao/nome
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one}
+             {:db/ident       :variacao/preco
+              :db/valueType   :db.type/bigdec
+              :db/cardinality :db.cardinality/one}
              ;========================================
              ;Categoria
              {:db/ident       :categoria/nome
@@ -231,3 +248,29 @@
                                 :where (produto-na-categoria ?produto ?nome-da-categoria)
                                 [?produto :produto/digital ?eh-digital?]]
                            db regras categorias digital?)))
+
+;===================================================
+;Transaction functions
+(s/defn atualiza-preco!
+  [conn produto-id :- UUID preco-antigo :- BigDecimal preco-novo :- BigDecimal]
+  ;:db/cas executa uma funcao na transacao para comparar e definir um valor
+  (d/transact conn [[:db/cas [:produto/id produto-id] :produto/preco preco-antigo preco-novo]]))
+
+(s/defn atualiza-produto!
+  [conn antigo :- m/Produto a-atualizar :- m/Produto]
+  (let [produto-id (:produto/id antigo)
+        atributos (cset/intersection (set (keys antigo)) (set (keys a-atualizar)))
+        atributos (disj atributos :produto/id)
+        txs (map (fn [atributo] [:db/cas [:produto/id produto-id] atributo (get antigo atributo) (get a-atualizar atributo)]) atributos)]
+    (d/transact conn txs)))
+
+(s/defn adiciona-variacao!
+  [conn produto-id :- UUID variacao :- s/Str preco :- BigDecimal]
+  ;Temp ID
+  ;Eh possivel definir um ID temporario para utilizar dentro da mesma transacao
+  (d/transact conn [{:db/id          "variacao-temporaria"
+                     :variacao/nome  variacao
+                     :variacao/preco preco
+                     :variacao/id    (m/uuid)}
+                    {:produto/id       produto-id
+                     :produto/variacao "variacao-temporaria"}]))
