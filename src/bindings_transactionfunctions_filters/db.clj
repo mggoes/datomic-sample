@@ -296,17 +296,43 @@
   ;retractEntity eh uma funcao de transacao que remove uma entidade do banco
   (d/transact conn [[:db/retractEntity [:produto/id produto-id]]]))
 
-(s/defn visualizacoes
-  [db produto-id :- UUID]
-  (or (d/q '[:find ?visualizacoes .
-             :in $ ?id
-             :where [?p :produto/id ?id]
-             [?p :produto/visualizacoes ?visualizacoes]]
-        db produto-id) 0))
+;(s/defn visualizacoes
+;  [db produto-id :- UUID]
+;  ;O ponto faz com que o Datomic retorne um item
+;  (or (d/q '[:find ?visualizacoes .
+;             :in $ ?id
+;             :where [?p :produto/id ?id]
+;             [?p :produto/visualizacoes ?visualizacoes]]
+;        db produto-id) 0))
+
+;(s/defn visualizacao!
+;  [conn produto-id :- UUID]
+;  (let [result (visualizacoes (d/db conn) produto-id)
+;        novo (inc result)]
+;    (d/transact conn [{:produto/id            produto-id
+;                       :produto/visualizacoes novo}])))
 
 (s/defn visualizacao!
   [conn produto-id :- UUID]
-  (let [result (visualizacoes (d/db conn) produto-id)
-        novo (inc result)]
-    (d/transact conn [{:produto/id            produto-id
-                       :produto/visualizacoes novo}])))
+  ;:incrementa-visualizacao eh a chave de uma funcao customizada que sera executada durante a transacao dentro do Datomic
+  (d/transact conn [[:incrementa-visualizacao produto-id]]))
+
+;Funcao customizada que sera executada no Datomic dentro do transactor
+(def incrementa-visualizacao
+  #db/fn {:lang   :clojure
+          :params [db produto-id]
+          :code   (let [visualizacoes (d/q '[:find ?visualizacoes .
+                                             :in $ ?id
+                                             :where [?produto :produto/id ?id]
+                                             [?produto :produto/visualizacoes ?visualizacoes]]
+                                        db produto-id)
+                        atual (or visualizacoes 0)
+                        total-novo (inc atual)]
+                    [{:produto/id            produto-id
+                      :produto/visualizacoes total-novo}])})
+
+(defn instala-fn-incremento!
+  [conn]
+  (pprint @(d/transact conn [{:db/doc   "Incrementa o atributo :produto/visualizacoes de uma entidade"
+                              :db/ident :incrementa-visualizacao
+                              :db/fn    incrementa-visualizacao}])))
