@@ -1,4 +1,4 @@
-(ns schemas-rules.a4_find_specs
+(ns schemas-rules.a4-find-specs
   (:use [clojure pprint])
   (:require [datomic.api :as d]
             [schemas-rules.db :as db]

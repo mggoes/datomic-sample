@@ -1,4 +1,4 @@
-(ns schemas-rules.a3_maybe_optional_key
+(ns schemas-rules.a3-maybe-optional-key
   (:use [clojure pprint])
   (:require [datomic.api :as d]
             [schemas-rules.db :as db]

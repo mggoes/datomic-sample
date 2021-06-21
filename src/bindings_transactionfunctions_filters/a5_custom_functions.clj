@@ -1,4 +1,4 @@
-(ns bindings-transactionfunctions-filters.a5_custom_functions
+(ns bindings-transactionfunctions-filters.a5-custom-functions
   (:use [clojure pprint])
   (:require [datomic.api :as d]
             [bindings-transactionfunctions-filters.db :as db]

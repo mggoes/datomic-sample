@@ -1,4 +1,4 @@
-(ns bindings-transactionfunctions-filters.a4_history
+(ns bindings-transactionfunctions-filters.a4-history
   (:use [clojure pprint])
   (:require [datomic.api :as d]
             [bindings-transactionfunctions-filters.db :as db]

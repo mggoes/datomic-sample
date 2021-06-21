@@ -1,4 +1,4 @@
-(ns bindings-transactionfunctions-filters.a3_components_functions
+(ns bindings-transactionfunctions-filters.a3-components-functions
   (:use [clojure pprint])
   (:require [datomic.api :as d]
             [bindings-transactionfunctions-filters.db :as db]
