@@ -10,5 +10,10 @@ pom.xml.asc
 /.nrepl-port
 .hgignore
 .hg/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
 *.iml
-/.idea
+*.ipr
+out/
