@@ -6,7 +6,7 @@
             [generators-schemas-indexes.db.produto :as db.produto]
             [generators-schemas-indexes.db.venda :as db.venda]))
 
-(def db-uri "datomic:dev://localhost:4334/ecommerce")
+(def db-uri "datomic:dev://localhost:4334/ecommerce?password=datomic")
 
 (defn abre-conexao! []
   (d/create-database db-uri)

@@ -5,7 +5,7 @@
             [filter-db-history.db.categoria :as db.categoria]
             [filter-db-history.db.produto :as db.produto]))
 
-(def db-uri "datomic:dev://localhost:4334/ecommerce")
+(def db-uri "datomic:dev://localhost:4334/ecommerce?password=datomic")
 
 (defn abre-conexao! []
   (d/create-database db-uri)

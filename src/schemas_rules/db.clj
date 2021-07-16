@@ -6,7 +6,7 @@
             [clojure.walk :as walk])
   (:import (java.util UUID)))
 
-(def db-uri "datomic:dev://localhost:4334/ecommerce")
+(def db-uri "datomic:dev://localhost:4334/ecommerce?password=datomic")
 
 ;===================================================
 ;Criando uma base de dados
